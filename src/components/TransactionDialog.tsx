@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 interface TransactionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  type: "add" | "subtract";
+  type: "add" | "subtract" | "distribute";
   onConfirm: (amount: number) => void;
 }
 
@@ -41,12 +41,14 @@ const TransactionDialog = ({ open, onOpenChange, type, onConfirm }: TransactionD
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>
-            {type === "add" ? "Add to Savings" : "Record Spending"}
+            {type === "add" ? "Add to Savings" : type === "subtract" ? "Record Spending" : "Distribute from Savings"}
           </DialogTitle>
           <DialogDescription>
             {type === "add" 
               ? "Enter the amount you want to add to your savings bag" 
-              : "Enter the amount you spent today"}
+              : type === "subtract"
+              ? "Enter the amount you spent today"
+              : "Enter the amount to distribute from savings to remaining days of the month"}
           </DialogDescription>
         </DialogHeader>
         

@@ -5,13 +5,20 @@ interface MoneyBagProps {
   label: string;
   size?: "small" | "large";
   variant?: "savings" | "spent";
+  onClick?: () => void;
 }
 
-const MoneyBag = ({ amount, label, size = "large", variant = "savings" }: MoneyBagProps) => {
+const MoneyBag = ({ amount, label, size = "large", variant = "savings", onClick }: MoneyBagProps) => {
   const sizeClasses = size === "large" ? "w-24 h-28" : "w-20 h-24";
   
   return (
-    <div className="flex flex-col items-center gap-2 animate-scale-in">
+    <div 
+      className={cn(
+        "flex flex-col items-center gap-2 animate-scale-in",
+        onClick && "cursor-pointer"
+      )}
+      onClick={onClick}
+    >
       {/* Bag */}
       <div className={cn(
         "relative rounded-b-3xl rounded-t-lg bag-texture transition-transform hover:scale-105",

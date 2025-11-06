@@ -12,15 +12,15 @@ const Index = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [savings, setSavings] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogType, setDialogType] = useState<"add" | "subtract">("add");
+  const [dialogType, setDialogType] = useState<"add" | "subtract" | "distribute">("add");
   
-  // Initialize budgets for 14 days (2 weeks)
+  // Initialize budgets for 14 days (2 weeks) - all empty by default
   const [dailyBudgets, setDailyBudgets] = useState<Record<number, number>>(() => {
     const initial: Record<number, number> = {};
     for (let i = 0; i < 14; i++) {
       const date = new Date();
       date.setDate(date.getDate() + i);
-      initial[date.getDate()] = DAILY_BUDGET;
+      initial[date.getDate()] = 0;
     }
     return initial;
   });
@@ -38,7 +38,7 @@ const Index = () => {
           for (let i = 0; i < 14; i++) {
             const date = new Date(now);
             date.setDate(date.getDate() + i);
-            newBudgets[date.getDate()] = DAILY_BUDGET;
+            newBudgets[date.getDate()] = 0;
           }
           setDailyBudgets(newBudgets);
           setSavings(0);
@@ -53,19 +53,21 @@ const Index = () => {
   const getCurrentWeekJars = () => {
     const jars = [];
     const today = currentDate.getDate();
-    const dayOfWeek = currentDate.getDay(); // 0 = Sunday
+    const dayOfWeek = currentDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0
     const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(currentDate.getDate() - dayOfWeek);
+    startOfWeek.setDate(currentDate.getDate() - daysFromMonday);
 
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
       const dayOfMonth = date.getDate();
+      const isPastDay = date < new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate());
       
       jars.push({
         dayOfMonth,
         dailyBudget: DAILY_BUDGET,
-        remainingAmount: dailyBudgets[dayOfMonth] || DAILY_BUDGET,
+        remainingAmount: isPastDay ? 0 : (dailyBudgets[dayOfMonth] || 0),
         isCurrentDay: dayOfMonth === today,
       });
     }
@@ -75,8 +77,9 @@ const Index = () => {
   const getNextWeekJars = () => {
     const jars = [];
     const dayOfWeek = currentDate.getDay();
+    const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
     const startOfNextWeek = new Date(currentDate);
-    startOfNextWeek.setDate(currentDate.getDate() - dayOfWeek + 7);
+    startOfNextWeek.setDate(currentDate.getDate() - daysFromMonday + 7);
 
     for (let i = 0; i < 7; i++) {
       const date = new Date(startOfNextWeek);
@@ -86,7 +89,7 @@ const Index = () => {
       jars.push({
         dayOfMonth,
         dailyBudget: DAILY_BUDGET,
-        remainingAmount: dailyBudgets[dayOfMonth] || DAILY_BUDGET,
+        remainingAmount: dailyBudgets[dayOfMonth] || 0,
       });
     }
     return jars;
@@ -98,8 +101,8 @@ const Index = () => {
     if (dialogType === "add") {
       setSavings(prev => prev + amount);
       toast.success(`Added $${amount.toFixed(2)} to savings!`);
-    } else {
-      const remaining = dailyBudgets[today] || DAILY_BUDGET;
+    } else if (dialogType === "subtract") {
+      const remaining = dailyBudgets[today] || 0;
       if (amount > remaining) {
         toast.error("Not enough budget for today!");
         return;
@@ -110,6 +113,26 @@ const Index = () => {
         [today]: remaining - amount,
       }));
       toast.success(`Spent $${amount.toFixed(2)} today`);
+    } else if (dialogType === "distribute") {
+      if (amount > savings) {
+        toast.error("Not enough savings!");
+        return;
+      }
+      
+      // Calculate days from today to end of month
+      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+      const daysRemaining = lastDayOfMonth - today + 1;
+      const amountPerDay = amount / daysRemaining;
+      
+      // Distribute amount equally
+      const newBudgets = { ...dailyBudgets };
+      for (let day = today; day <= lastDayOfMonth; day++) {
+        newBudgets[day] = (newBudgets[day] || 0) + amountPerDay;
+      }
+      
+      setDailyBudgets(newBudgets);
+      setSavings(prev => prev - amount);
+      toast.success(`Distributed $${amount.toFixed(2)} across ${daysRemaining} days ($${amountPerDay.toFixed(2)}/day)`);
     }
   };
 
@@ -143,6 +166,10 @@ const Index = () => {
               label="Savings" 
               size="small"
               variant="savings"
+              onClick={() => {
+                setDialogType("distribute");
+                setDialogOpen(true);
+              }}
             />
             <MoneyBag 
               amount={totalSpent} 
