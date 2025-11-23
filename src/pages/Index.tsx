@@ -11,7 +11,6 @@ const DAILY_BUDGET = 50; // Default daily budget
 const Index = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [savings, setSavings] = useState(0);
-  const [amountToSpend, setAmountToSpend] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"add" | "subtract" | "distribute">("add");
   
@@ -101,9 +100,21 @@ const Index = () => {
     
     if (dialogType === "add") {
       if (spendAmount !== undefined && saveAmount !== undefined) {
-        setAmountToSpend(prev => prev + spendAmount);
+        // Add to savings
         setSavings(prev => prev + saveAmount);
-        toast.success(`Added $${amount.toFixed(2)} total ($${spendAmount.toFixed(2)} to spend, $${saveAmount.toFixed(2)} to save)`);
+        
+        // Distribute spendAmount among jars from today to end of month
+        const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+        const daysRemaining = lastDayOfMonth - today + 1;
+        const amountPerDay = spendAmount / daysRemaining;
+        
+        const newBudgets = { ...dailyBudgets };
+        for (let day = today; day <= lastDayOfMonth; day++) {
+          newBudgets[day] = (newBudgets[day] || 0) + amountPerDay;
+        }
+        setDailyBudgets(newBudgets);
+        
+        toast.success(`Added $${amount.toFixed(2)} total ($${spendAmount.toFixed(2)} distributed to jars, $${saveAmount.toFixed(2)} to savings)`);
       }
     } else if (dialogType === "subtract") {
       const remaining = dailyBudgets[today] || 0;
@@ -145,6 +156,11 @@ const Index = () => {
     0
   );
 
+  const totalInJars = Object.values(dailyBudgets).reduce(
+    (sum, remaining) => sum + remaining,
+    0
+  );
+
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col items-center justify-between">
       <div className="w-full max-w-md space-y-4 pt-8">
@@ -152,7 +168,7 @@ const Index = () => {
         <div className="flex items-center justify-between mb-6">
           <div className="text-left">
             <div className="text-xs font-medium text-muted-foreground">Amount to spend</div>
-            <div className="text-lg font-bold text-foreground">${amountToSpend.toFixed(2)}</div>
+            <div className="text-lg font-bold text-foreground">${totalInJars.toFixed(2)}</div>
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground">
