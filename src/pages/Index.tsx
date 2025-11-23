@@ -163,7 +163,7 @@ const Index = () => {
           <div className="flex justify-center items-end gap-8 mb-6">
             <MoneyBag 
               amount={savings} 
-              label="Savings" 
+              label="Monthly budget" 
               size="small"
               variant="savings"
               onClick={() => {
@@ -173,7 +173,7 @@ const Index = () => {
             />
             <MoneyBag 
               amount={totalSpent} 
-              label="Spent This Month" 
+              label="Savings" 
               size="large"
               variant="spent"
             />
