@@ -151,11 +151,6 @@ const Index = () => {
     }
   };
 
-  const totalSpent = Object.values(dailyBudgets).reduce(
-    (sum, remaining) => sum + (DAILY_BUDGET - remaining),
-    0
-  );
-
   const totalInJars = Object.values(dailyBudgets).reduce(
     (sum, remaining) => sum + remaining,
     0
@@ -201,7 +196,7 @@ const Index = () => {
             }}
           />
             <MoneyBag 
-              amount={totalSpent} 
+              amount={0} 
               label="Total savings" 
               size="large"
               variant="spent"
