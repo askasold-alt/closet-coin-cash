@@ -11,6 +11,7 @@ const DAILY_BUDGET = 50; // Default daily budget
 const Index = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [savings, setSavings] = useState(0);
+  const [amountToSpend, setAmountToSpend] = useState(0);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState<"add" | "subtract" | "distribute">("add");
   
@@ -95,12 +96,15 @@ const Index = () => {
     return jars;
   };
 
-  const handleTransaction = (amount: number) => {
+  const handleTransaction = (amount: number, spendAmount?: number, saveAmount?: number) => {
     const today = currentDate.getDate();
     
     if (dialogType === "add") {
-      setSavings(prev => prev + amount);
-      toast.success(`Added $${amount.toFixed(2)} to savings!`);
+      if (spendAmount !== undefined && saveAmount !== undefined) {
+        setAmountToSpend(prev => prev + spendAmount);
+        setSavings(prev => prev + saveAmount);
+        toast.success(`Added $${amount.toFixed(2)} total ($${spendAmount.toFixed(2)} to spend, $${saveAmount.toFixed(2)} to save)`);
+      }
     } else if (dialogType === "subtract") {
       const remaining = dailyBudgets[today] || 0;
       if (amount > remaining) {
@@ -131,7 +135,7 @@ const Index = () => {
       }
       
       setDailyBudgets(newBudgets);
-      setSavings(prev => prev - amount);
+      setAmountToSpend(prev => prev - amount);
       toast.success(`Distributed $${amount.toFixed(2)} across ${daysRemaining} days ($${amountPerDay.toFixed(2)}/day)`);
     }
   };
@@ -144,10 +148,19 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background p-4 flex flex-col items-center justify-between">
       <div className="w-full max-w-md space-y-4 pt-8">
-        {/* Title */}
-        <h1 className="text-2xl font-bold text-center text-foreground mb-6">
-          Budget Closet
-        </h1>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="text-left">
+            <div className="text-xs font-medium text-muted-foreground">Amount to spend</div>
+            <div className="text-lg font-bold text-foreground">${amountToSpend.toFixed(2)}</div>
+          </div>
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-foreground">
+              {currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+            </h1>
+          </div>
+          <div className="w-24"></div>
+        </div>
 
         {/* Closet - Upper part */}
         <div className="space-y-6 p-4 bg-card rounded-xl shadow-xl">
@@ -162,8 +175,8 @@ const Index = () => {
           {/* Bags */}
           <div className="flex justify-center items-end gap-8 mb-6">
             <MoneyBag 
-              amount={savings} 
-              label="Monthly budget" 
+              amount={amountToSpend} 
+              label="Monthly savings" 
               size="small"
               variant="savings"
               onClick={() => {
@@ -173,7 +186,7 @@ const Index = () => {
             />
             <MoneyBag 
               amount={totalSpent} 
-              label="Savings" 
+              label="Total savings" 
               size="large"
               variant="spent"
             />
