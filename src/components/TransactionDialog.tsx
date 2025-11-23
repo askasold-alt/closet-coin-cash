@@ -56,10 +56,11 @@ const TransactionDialog = ({ open, onOpenChange, type, onConfirm }: TransactionD
   const handleTotalChange = (value: string) => {
     setTotalAmount(value);
     const total = parseFloat(value) || 0;
-    const spend = parseFloat(amountToSpend) || 0;
-    if (spend > 0) {
-      setAmountToSave((total - spend).toFixed(2));
-    }
+    // Default split: 70% to spend, 30% to save
+    const spend = (total * 0.7).toFixed(2);
+    const save = (total * 0.3).toFixed(2);
+    setAmountToSpend(spend);
+    setAmountToSave(save);
   };
 
   const handleSpendChange = (value: string) => {

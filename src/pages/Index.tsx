@@ -135,7 +135,7 @@ const Index = () => {
       }
       
       setDailyBudgets(newBudgets);
-      setAmountToSpend(prev => prev - amount);
+      setSavings(prev => prev - amount);
       toast.success(`Distributed $${amount.toFixed(2)} across ${daysRemaining} days ($${amountPerDay.toFixed(2)}/day)`);
     }
   };
@@ -174,16 +174,16 @@ const Index = () => {
         <div className="bg-card rounded-xl shadow-xl p-6">
           {/* Bags */}
           <div className="flex justify-center items-end gap-8 mb-6">
-            <MoneyBag 
-              amount={amountToSpend} 
-              label="Monthly savings" 
-              size="small"
-              variant="savings"
-              onClick={() => {
-                setDialogType("distribute");
-                setDialogOpen(true);
-              }}
-            />
+          <MoneyBag 
+            amount={savings} 
+            label="Monthly savings" 
+            size="small"
+            variant="savings"
+            onClick={() => {
+              setDialogType("distribute");
+              setDialogOpen(true);
+            }}
+          />
             <MoneyBag 
               amount={totalSpent} 
               label="Total savings" 
